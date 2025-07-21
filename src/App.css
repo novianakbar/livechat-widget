@@ -1,0 +1,18 @@
+/* Livechat OSS Widget Base Styles */
+.livechat-oss-widget {
+  /* Widget container styles - minimal to avoid conflicts */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Reset styles to prevent conflicts with host page */
+.livechat-oss-widget * {
+  box-sizing: border-box;
+}
+
+.livechat-oss-widget button {
+  font-family: inherit;
+}
+
+.livechat-oss-widget input {
+  font-family: inherit;
+}

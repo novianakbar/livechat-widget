@@ -1,0 +1,6 @@
+/* Minimal global styles for the widget */
+.livechat-oss-widget-root {
+  /* Ensure the widget doesn't interfere with host page */
+  all: initial;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
