@@ -21,8 +21,8 @@ export interface ChatState {
 
 const defaultConfig: WidgetConfig = {
   primaryColor: "#3B82F6",
-  widgetTitle: "Bantuan OSS",
-  welcomeMessage: "Selamat datang di layanan bantuan OSS Perizinan Berusaha",
+  widgetTitle: "Bantuan",
+  welcomeMessage: "Selamat datang di layanan bantuan",
   position: "bottom-right",
   autoOpen: false,
   showAgentInfo: true,
@@ -51,20 +51,23 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
   useEffect(() => {
     if (chatState.currentSession) {
       const connectWebSocket = () => {
+        // Ganti URL ke livechat-ws
+        const sessionId = chatState.currentSession!.id;
+        const userId = chatState.currentSession!.customerId || "customer";
+        const userType = "customer";
         const wsUrl = `${
-          import.meta.env.VITE_WS_URL || "ws://localhost:8080"
-        }/ws/chat`;
+          import.meta.env.VITE_WS_URL || "ws://localhost:8081"
+        }/ws/${sessionId}/${userId}/${userType}`;
         const websocket = new WebSocket(wsUrl);
 
         websocket.onopen = () => {
           setIsConnected(true);
-          console.log("Widget WebSocket connected");
           // Join the session as customer
           websocket.send(
             JSON.stringify({
               type: "join_session",
-              session_id: chatState.currentSession!.id,
-              data: {}, // Customer data
+              session_id: sessionId,
+              data: { user_id: userId, user_type: userType },
               timestamp: new Date().toISOString(),
             })
           );
@@ -130,7 +133,7 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
                 }
                 break;
 
-              case "typing":
+              case "typing_indicator":
                 if (
                   wsMessage.data.session_id === chatState.currentSession?.id &&
                   wsMessage.data.sender_type === "agent"
@@ -333,7 +336,7 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
     if (ws && isConnected && chatState.currentSession) {
       ws.send(
         JSON.stringify({
-          type: "customer_typing",
+          type: "typing_start",
           session_id: chatState.currentSession.id,
           data: { is_typing: true },
           timestamp: new Date().toISOString(),
@@ -350,7 +353,7 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
         if (ws && isConnected && chatState.currentSession) {
           ws.send(
             JSON.stringify({
-              type: "customer_typing",
+              type: "typing_stop",
               session_id: chatState.currentSession.id,
               data: { is_typing: false },
               timestamp: new Date().toISOString(),
@@ -365,7 +368,7 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
     if (ws && isConnected && chatState.currentSession) {
       ws.send(
         JSON.stringify({
-          type: "customer_typing",
+          type: "typing_stop",
           session_id: chatState.currentSession.id,
           data: { is_typing: false },
           timestamp: new Date().toISOString(),
