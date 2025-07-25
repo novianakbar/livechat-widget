@@ -18,9 +18,13 @@ export default defineConfig({
       external: [],
       output: {
         globals: {},
+        // Ensure the UMD build exposes the correct global
+        name: "LivechatOSSWidget",
       },
     },
     cssCodeSplit: false,
     minify: "terser",
+    // Inline CSS into JS to make it a single file
+    assetsInlineLimit: 100000000,
   },
 });

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Embed Livechat Widget - OSS Perizinan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #3B82F6, #1E40AF);
+            color: white;
+            border-radius: 10px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #3B82F6;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #2563EB;
+        }
+        .note {
+            background: #e7f3ff;
+            border-left: 4px solid #3B82F6;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Demo Embed Livechat Widget</h1>
+            <p>Online Single Submission (OSS) - Perizinan Berusaha</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>1. Embed Otomatis (Direkomendasikan)</h2>
+                <p>Widget akan otomatis muncul di pojok kanan bawah halaman:</p>
+                <div class="code-block">
+&lt;!-- Cukup tambahkan script ini ke halaman HTML Anda --&gt;
+&lt;script src="./livechat-oss-widget.umd.js"&gt;&lt;/script&gt;
+                </div>
+                <div class="note">
+                    <strong>Catatan:</strong> Widget akan muncul secara otomatis tanpa perlu konfigurasi tambahan.
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>2. Embed dengan Konfigurasi</h2>
+                <p>Untuk mengkustomisasi widget, tambahkan konfigurasi sebelum script:</p>
+                <div class="code-block">
+&lt;script&gt;
+window.LivechatOSSConfig = {
+    primaryColor: '#3B82F6',
+    widgetTitle: 'Bantuan OSS Perizinan',
+    welcomeMessage: 'Selamat datang! Bagaimana kami bisa membantu perizinan berusaha Anda?',
+    position: 'bottom-right', // bottom-left, top-right, top-left
+    autoOpen: false,
+    allowFileUpload: true
+};
+&lt;/script&gt;
+&lt;script src="./livechat-oss-widget.umd.js"&gt;&lt;/script&gt;
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>3. Embed Manual (Kontrol Penuh)</h2>
+                <p>Untuk kontrol lebih detail, gunakan JavaScript API:</p>
+                <div class="code-block">
+&lt;div id="my-livechat"&gt;&lt;/div&gt;
+
+&lt;script src="./livechat-oss-widget.umd.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+// Buat instance widget
+const widget = new LiveChatWidget({
+    primaryColor: '#3B82F6',
+    widgetTitle: 'Bantuan OSS',
+    position: 'bottom-right'
+});
+
+// Mount ke element tertentu
+widget.mount('#my-livechat');
+&lt;/script&gt;
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>4. Kontrol Widget</h2>
+                <p>Anda bisa mengontrol widget secara programatis:</p>
+                <button class="btn" onclick="testManualInit()">Test Manual Init</button>
+                <button class="btn" onclick="testWithConfig()">Test With Config</button>
+                <button class="btn" onclick="testMountToDiv()">Mount to Div</button>
+                
+                <div id="custom-widget-container" style="margin-top: 20px; min-height: 50px; border: 2px dashed #ccc; padding: 10px;">
+                    <p>Container untuk manual mount (klik "Mount to Div" di atas)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="./livechat-oss-widget.css">
+    <script src="./livechat-oss-widget.umd.js"></script>
+</body>
+</html>

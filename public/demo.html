@@ -4,87 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demo Website dengan Livechat Widget</title>
-    <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background: #f8fafc;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            background: #3B82F6;
-            color: white;
-            padding: 20px;
-            margin: -30px -30px 30px;
-            border-radius: 8px 8px 0 0;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 2em;
-        }
-        .section {
-            margin: 30px 0;
-        }
-        .section h2 {
-            color: #1f2937;
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 10px;
-        }
-        .service-card {
-            background: #f8fafc;
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 6px;
-            border-left: 4px solid #3B82F6;
-        }
-        .cta-box {
-            background: #eff6ff;
-            padding: 20px;
-            border-radius: 6px;
-            text-align: center;
-            margin: 30px 0;
-            border: 1px solid #dbeafe;
-        }
-        .btn {
-            background: #3B82F6;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            text-decoration: none;
-            display: inline-block;
-            margin: 10px;
-        }
-        .btn:hover {
-            background: #2563eb;
-        }
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 1px solid #e5e7eb;
-            color: #6b7280;
-        }
-    </style>
+    <!-- <link rel="stylesheet" href="/dist/livechat-oss-widget.umd.css"> -->
 </head>
 <body>
     <div class="container">
        
     </div>
-
+   
     <!-- Livechat OSS Widget Configuration -->
-    <script>
+    <!-- <script>
     window.LivechatOSSConfig = {
         apiUrl: 'http://localhost:8000',
         websocketUrl: 'http://localhost:8000',
@@ -97,12 +25,9 @@
         maxFileSize: 10,
         allowedFileTypes: ['image/*', '.pdf', '.doc', '.docx', '.txt']
     };
-    </script>
+    </script> -->
 
-    <!-- Load Livechat OSS Widget (dalam development, ini akan di-load dari build) -->
-    <script src="/dist/livechat-oss-widget.umd.js"></script>
-    
-    <!-- Untuk development, kita load dari dev server -->
-    <!-- <script type="module" src="/src/main.tsx"></script> -->
+    <link rel="stylesheet" href="./livechat-oss-widget.css">
+    <script src="./livechat-oss-widget.umd.js"></script>
 </body>
 </html>
