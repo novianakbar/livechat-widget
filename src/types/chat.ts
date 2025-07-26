@@ -26,6 +26,8 @@ export interface Customer {
   phone?: string;
   company?: string;
   subject?: string;
+  position?: string;
+  ossUserId?: string;
   createdAt: Date;
 }
 

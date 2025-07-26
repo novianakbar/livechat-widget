@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Widget</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .test-content {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            line-height: 1.6;
+            color: #666;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-content">
+        <h1>Test Page for Livechat Widget</h1>
+        
+        <div class="test-section">
+            <h2>Instructions:</h2>
+            <p>1. The chat widget toggle button should appear in the bottom-right corner</p>
+            <p>2. The cursor should change to a pointer when hovering over the button</p>
+            <p>3. Clicking the button should open the chat widget</p>
+            <p>4. Check the browser console for any error messages</p>
+        </div>
+        
+        <div class="test-section">
+            <h2>Page Content:</h2>
+            <p>This is a test page to verify that the livechat widget works correctly. The widget should be embedded and functional.</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+            <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+        
+        <div class="test-section">
+            <h2>Debug Info:</h2>
+            <p>Open browser developer tools (F12) and check the Console tab for debug messages.</p>
+            <button onclick="console.log('Test button works - this confirms JavaScript is working')">Test Button</button>
+        </div>
+    </div>
+
+    <!-- Widget Script -->
+    <script type="module">
+        // Configure widget before loading
+        window.LivechatOSSConfig = {
+            primaryColor: '#9b1f15',
+            widgetTitle: 'Bantuan OSS',
+            welcomeMessage: 'Selamat datang di layanan bantuan OSS',
+            position: 'bottom-right',
+            autoOpen: false,
+            showAgentInfo: true,
+            allowFileUpload: true
+        };
+        
+        // Import and initialize widget
+        import('/src/main.tsx').then(module => {
+            console.log('Widget loaded successfully');
+        }).catch(error => {
+            console.error('Failed to load widget:', error);
+        });
+    </script>
+</body>
+</html>

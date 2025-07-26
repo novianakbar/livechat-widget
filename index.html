@@ -1,139 +1,184 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Demo Website dengan Livechat Widget</title>
+  <title>LiveChat Widget - Test Page</title>
   <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      line-height: 1.6;
+    * {
       margin: 0;
-      padding: 20px;
-      background: #f8fafc;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      line-height: 1.6;
     }
 
     .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: white;
-      padding: 30px;
+      text-align: center;
+      max-width: 800px;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .feature-box {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 2rem;
+      margin: 2rem 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .feature-box h2 {
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+      color: #ffd700;
+    }
+
+    .instruction {
+      background: rgba(255, 255, 255, 0.15);
       border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-left: 4px solid #ffd700;
+      text-align: left;
     }
 
-    .header {
-      background: #3B82F6;
+    .instruction strong {
+      color: #ffd700;
+    }
+
+    .widget-status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
       color: white;
-      padding: 20px;
-      margin: -30px -30px 30px;
-      border-radius: 8px 8px 0 0;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 14px;
+      backdrop-filter: blur(10px);
+      z-index: 1000;
     }
 
-    .header h1 {
-      margin: 0;
-      font-size: 2em;
-    }
-
-    .section {
-      margin: 30px 0;
-    }
-
-    .section h2 {
-      color: #1f2937;
-      border-bottom: 2px solid #e5e7eb;
-      padding-bottom: 10px;
-    }
-
-    .service-card {
-      background: #f8fafc;
-      padding: 20px;
-      margin: 15px 0;
-      border-radius: 6px;
-      border-left: 4px solid #3B82F6;
-    }
-
-    .cta-box {
-      background: #eff6ff;
-      padding: 20px;
-      border-radius: 6px;
-      text-align: center;
-      margin: 30px 0;
-      border: 1px solid #dbeafe;
-    }
-
-    .btn {
-      background: #3B82F6;
-      color: white;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      text-decoration: none;
+    .status-dot {
       display: inline-block;
-      margin: 10px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 2s infinite;
     }
 
-    .btn:hover {
-      background: #2563eb;
+    .status-active {
+      background: #4ade80;
     }
 
-    footer {
-      text-align: center;
-      margin-top: 50px;
-      padding-top: 30px;
-      border-top: 1px solid #e5e7eb;
-      color: #6b7280;
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .note {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      opacity: 0.8;
     }
   </style>
 </head>
 
 <body>
-  <!-- LiveChat Widget akan muncul di sini -->
+  <div class="widget-status">
+    <span class="status-dot status-active"></span>
+    Widget Status: Ready
+  </div>
+
+  <div class="container">
+    <h1>� LiveChat Widget</h1>
+    <p class="subtitle">Test page for the LiveChat widget integration. Look for the chat button in the bottom-right corner.</p>
+
+    <div class="feature-box">
+      <h2>� Features</h2>
+      <div class="instruction">
+        <strong>Real-time Chat:</strong> Instant messaging with support agents
+      </div>
+      <div class="instruction">
+        <strong>File Upload:</strong> Share documents and images
+      </div>
+      <div class="instruction">
+        <strong>Chat History:</strong> View previous conversations
+      </div>
+      <div class="instruction">
+        <strong>Responsive Design:</strong> Works on all devices
+      </div>
+    </div>
+
+    <div class="feature-box">
+      <h2>🧪 How to Test</h2>
+      <div class="instruction">
+        <strong>Step 1:</strong> Look for the chat button in the bottom-right corner
+      </div>
+      <div class="instruction">
+        <strong>Step 2:</strong> Click the button to open the chat widget
+      </div>
+      <div class="instruction">
+        <strong>Step 3:</strong> Fill in the contact form to start a new chat
+      </div>
+      <div class="instruction">
+        <strong>Step 4:</strong> Test messaging, file upload, and other features
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Note:</strong> This is a development test page. The widget connects to the local backend at localhost:8080.
+    </div>
+  </div>
+
+  <div class="footer">
+    LiveChat Widget v1.0 - OSS Project
+  </div>
+
+  <!-- LiveChat Widget Container -->
   <div id="livechat-widget-root"></div>
   
+  <!-- Load Widget Script -->
   <script type="module" src="/src/main.tsx"></script>
-  
-  <!-- <script>
-    function openChatWidget() {
-      // This function would trigger the chat widget to open
-      // For demo purposes, we'll show an alert
-      alert('Chat widget akan terbuka di sini! (Demo mode)');
-      console.log('Opening chat widget...');
-    }
-
-    // Auto-scroll demo
-    let scrollPosition = 0;
-    function autoScrollDemo() {
-      const demoSections = document.querySelectorAll('.demo-section');
-      if (demoSections.length > 0) {
-        const currentSection = demoSections[scrollPosition % demoSections.length];
-        currentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        scrollPosition++;
-      }
-    }
-
-    // Uncomment to enable auto-scroll demo every 10 seconds
-    // setInterval(autoScrollDemo, 10000);
-
-    // Simulate live data updates
-    function updateLiveStats() {
-      const serviceItems = document.querySelectorAll('.service-item h4');
-      serviceItems.forEach(item => {
-        // Add subtle animation to show "live" updates
-        item.style.transform = 'scale(1.05)';
-        setTimeout(() => {
-          item.style.transform = 'scale(1)';
-        }, 200);
-      });
-    }
-
-    // Update stats every 30 seconds for demo effect
-    setInterval(updateLiveStats, 30000);
-  </script> -->
- 
 </body>
 
 </html>

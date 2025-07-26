@@ -138,6 +138,32 @@ Widget ini terintegrasi dengan:
 - `session:assigned` - Admin assigned ke sesi
 - `session:closed` - Sesi ditutup admin
 
+## WebSocket Connection Management (NEW)
+
+Widget sekarang menggunakan smart WebSocket connection management:
+
+### Fitur Baru:
+
+1. **Conditional Connection**: WebSocket hanya terkoneksi saat widget terbuka dan ada session aktif
+2. **Auto Disconnect**: Koneksi otomatis terputus saat widget ditutup atau session di-clear
+3. **Smart Reconnect**: Reconnect hanya terjadi jika widget masih terbuka dan session masih aktif
+4. **Memory Leak Prevention**: Automatic cleanup untuk timeout dan connections
+
+### Cara Kerja:
+
+- WebSocket connection hanya aktif saat `isOpen = true` dan ada `currentSession`
+- Saat widget ditutup (`toggleWidget` atau `closeWidget`), koneksi langsung terputus
+- Saat `clearSession` dipanggil, koneksi terputus dan tidak akan reconnect
+- Reconnect timeout otomatis di-clear saat tidak diperlukan
+
+### API Tambahan:
+
+```typescript
+// Manual control WebSocket connection (opsional)
+actions.enableWebSocketConnection()   // Aktifkan koneksi
+actions.disableWebSocketConnection()  // Matikan koneksi
+```
+
 ## Development
 
 ### Struktur Project

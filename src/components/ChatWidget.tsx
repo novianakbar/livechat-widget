@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Paperclip, Minimize2, FileText, HelpCircle, Settings } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { MessageCircle, X, Send, Paperclip, Minimize2, FileText, HelpCircle, Settings, ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 import { useChatWidget } from '../hooks/useChatWidget';
 import { NotificationSettings } from './NotificationSettings';
+import { ChatHistory } from './ChatHistory';
 import type { Customer, WidgetConfig } from '../types/chat';
 import './ChatWidget.css';
 
@@ -48,6 +49,8 @@ const formatTimestamp = (timestamp: Date | string): string => {
 
 export function ChatWidget({ config }: ChatWidgetProps) {
   const { chatState, messages, isLoading, error, config: widgetConfig, actions } = useChatWidget(config);
+
+  const [currentView, setCurrentView] = useState<'history' | 'form' | 'chat'>('history');
   const [customerForm, setCustomerForm] = useState<Omit<Customer, 'id' | 'createdAt'>>({
     name: '',
     email: '',
@@ -85,6 +88,42 @@ export function ChatWidget({ config }: ChatWidgetProps) {
     }
   }, [chatState.isOpen, messages.length]);
 
+  // Auto switch to chat view when session is active
+  useEffect(() => {
+    if (chatState.currentSession) {
+      setCurrentView('chat');
+    }
+  }, [chatState.currentSession]);
+
+  // Auto switch back to history when session is cleared
+  useEffect(() => {
+    if (!chatState.currentSession && currentView === 'chat') {
+      setCurrentView('history');
+    }
+  }, [chatState.currentSession, currentView]);
+
+  // const handleSelectSession = async (sessionId: string) => {
+  //   await actions.loadSession(sessionId);
+  //   setCurrentView('chat');
+  // };
+
+  const handleSelectSession = async (sessionId: string) => {
+    await actions.loadSession(sessionId);
+    setCurrentView('chat');
+  };
+
+  const handleStartNewChat = () => {
+    setCurrentView('form');
+  };
+
+  const handleBackToHistory = () => {
+    setCurrentView('history');
+    // Clear current session when going back
+    actions.clearSession();
+    // Refresh chat history to ensure it's up to date
+    actions.loadChatHistory();
+  };
+
   const handleStartChat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerForm.name.trim()) return;
@@ -112,6 +151,12 @@ export function ChatWidget({ config }: ChatWidgetProps) {
     e.target.value = '';
   };
 
+  const handleToggleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    actions.toggleWidget();
+  }, [actions]);
+
   const handleInputChange = (value: string) => {
     setMessageInput(value);
     if (value.trim()) {
@@ -125,14 +170,19 @@ export function ChatWidget({ config }: ChatWidgetProps) {
     <>
       {/* Widget Toggle Button */}
       {!chatState.isOpen && (
-        <div
+        <button
           className={clsx(
             'chat-widget-toggle',
             `chat-widget-toggle--${widgetConfig.position}`,
             { 'chat-widget-toggle--has-notifications': chatState.unreadCount > 0 }
           )}
-          onClick={actions.toggleWidget}
+          onClick={handleToggleClick}
+          onMouseDown={(e) => {
+            e.preventDefault();
+          }}
           style={{ backgroundColor: widgetConfig.primaryColor }}
+          type="button"
+          aria-label="Open chat widget"
         >
           <MessageCircle size={24} />
           {chatState.unreadCount > 0 && (
@@ -140,7 +190,7 @@ export function ChatWidget({ config }: ChatWidgetProps) {
               <span>{chatState.unreadCount > 9 ? '9+' : chatState.unreadCount}</span>
             </div>
           )}
-        </div>
+        </button>
       )}
 
       {/* Main Chat Widget */}
@@ -203,12 +253,55 @@ export function ChatWidget({ config }: ChatWidgetProps) {
                 </div>
               )}
 
-              {/* Customer Form */}
-              {!chatState.currentSession && (
+              {/* History View - No Active Session */}
+              {currentView === 'history' && (
                 <div className="chat-widget-form">
                   <div className="oss-branding">
                     <FileText className="oss-icon" size={20} />
                     <h4>Bantuan OSS Perizinan Berusaha</h4>
+                  </div>
+                  <p className="chat-widget-welcome">
+                    Dapatkan bantuan untuk pengurusan izin berusaha melalui Online Single Submission (OSS)
+                  </p>
+
+                  <div style={{ margin: '20px 0', textAlign: 'center' }}>
+                    <button
+                      onClick={handleStartNewChat}
+                      className="chat-widget-submit"
+                      style={{
+                        backgroundColor: widgetConfig.primaryColor,
+                        width: '100%'
+                      }}
+                    >
+                      💬 Mulai Chat Baru
+                    </button>
+                  </div>
+
+                  {/* Chat History */}
+                  <ChatHistory
+                    chatHistory={chatState.chatHistory}
+                    isLoadingHistory={chatState.isLoadingHistory}
+                    onSelectSession={handleSelectSession}
+                    onRefreshHistory={() => actions.loadChatHistory()}
+                  />
+                </div>
+              )}
+
+              {/* Customer Form View */}
+              {currentView === 'form' && (
+                <div className="chat-widget-form">
+                  <div className="form-header">
+                    <button
+                      onClick={handleBackToHistory}
+                      className="form-back-button"
+                      title="Kembali ke Riwayat"
+                    >
+                      <ArrowLeft size={16} />
+                    </button>
+                    <div className="oss-branding">
+                      <FileText className="oss-icon" size={20} />
+                      <h4>Bantuan OSS Perizinan Berusaha</h4>
+                    </div>
                   </div>
                   <p className="chat-widget-welcome">
                     Dapatkan bantuan untuk pengurusan izin berusaha melalui Online Single Submission (OSS)
@@ -278,6 +371,13 @@ export function ChatWidget({ config }: ChatWidgetProps) {
                       onChange={(e) => setCustomerForm({ ...customerForm, company: e.target.value })}
                       className="chat-widget-input"
                     />
+                    <input
+                      type="text"
+                      placeholder="Jabatan/Posisi"
+                      value={customerForm.position}
+                      onChange={(e) => setCustomerForm({ ...customerForm, position: e.target.value })}
+                      className="chat-widget-input"
+                    />
                     <textarea
                       placeholder="Jelaskan kebutuhan bantuan Anda (misal: cara mengurus NIB, status permohonan, dll)"
                       value={customerForm.subject}
@@ -298,9 +398,28 @@ export function ChatWidget({ config }: ChatWidgetProps) {
                 </div>
               )}
 
-              {/* Chat Messages */}
-              {chatState.currentSession && (
+              {/* Chat Messages View */}
+              {currentView === 'chat' && chatState.currentSession && (
                 <div className="chat-widget-messages">
+                  <div className="chat-header-info">
+                    <button
+                      onClick={handleBackToHistory}
+                      className="back-button"
+                      title="Kembali ke Riwayat"
+                    >
+                      <ArrowLeft size={16} />
+                    </button>
+                    <div className="chat-session-info">
+                      <div className="session-title">
+                        <FileText size={16} />
+                        <span>Chat Aktif</span>
+                      </div>
+                      <span className="session-status">
+                        Status: {chatState.currentSession.status}
+                      </span>
+                    </div>
+                  </div>
+
                   <div className="chat-messages-container">
                     {messages.map((message) => (
                       <div

@@ -2,5 +2,37 @@
 .livechat-oss-widget-root {
   /* Ensure the widget doesn't interfere with host page */
   all: initial;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Roboto", sans-serif;
+}
+
+/* Ensure widget toggle is always clickable */
+.chat-widget-toggle {
+  pointer-events: auto !important;
+}
+
+.chat-widget-toggle * {
+  pointer-events: none;
+}
+
+/* Ensure all widget elements are clickable and scrollable */
+.chat-widget * {
+  box-sizing: border-box;
+}
+
+.chat-widget button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.chat-widget input,
+.chat-widget textarea {
+  pointer-events: auto !important;
+  cursor: text !important;
+}
+
+.chat-widget-content,
+.chat-widget-form,
+.chat-widget-messages {
+  pointer-events: auto !important;
 }

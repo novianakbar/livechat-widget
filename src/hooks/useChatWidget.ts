@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { chatAPI } from "../services/api";
+import type { ChatHistoryItem } from "../services/api";
 import { notificationService } from "../services/notification";
 import type {
   Message,
@@ -17,6 +18,9 @@ export interface ChatState {
     name: string;
     isOnline: boolean;
   } | null;
+  chatHistory: ChatHistoryItem[];
+  isLoadingHistory: boolean;
+  historyLoaded: boolean; // Track if we've attempted to load history
 }
 
 const defaultConfig: WidgetConfig = {
@@ -36,6 +40,9 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
     unreadCount: 0,
     isTyping: false,
     assignedAdmin: null,
+    chatHistory: [],
+    isLoadingHistory: false,
+    historyLoaded: false,
   });
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,14 +50,48 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
   const [error, setError] = useState<string>("");
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [shouldMaintainConnection, setShouldMaintainConnection] =
+    useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const shouldMaintainConnectionRef = useRef(false);
+  const isOpenRef = useRef(false);
+  const currentSessionRef = useRef<ChatSession | null>(null);
 
   const mergedConfig = { ...defaultConfig, ...config };
 
+  // Update refs whenever states change
+  useEffect(() => {
+    shouldMaintainConnectionRef.current = shouldMaintainConnection;
+  }, [shouldMaintainConnection]);
+
+  useEffect(() => {
+    isOpenRef.current = chatState.isOpen;
+  }, [chatState.isOpen]);
+
+  useEffect(() => {
+    currentSessionRef.current = chatState.currentSession;
+  }, [chatState.currentSession]);
+
   // WebSocket connection
   useEffect(() => {
-    if (chatState.currentSession) {
+    // Clear any existing reconnect timeout when dependencies change
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    if (
+      chatState.currentSession &&
+      chatState.isOpen &&
+      shouldMaintainConnection
+    ) {
       const connectWebSocket = () => {
+        // Check if we should still maintain connection before attempting to connect
+        if (!shouldMaintainConnection || !chatState.isOpen) {
+          return;
+        }
+
         // Ganti URL ke livechat-ws
         const sessionId = chatState.currentSession!.id;
         const userId = chatState.currentSession!.customerId || "customer";
@@ -174,11 +215,37 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
         websocket.onclose = () => {
           console.log("Widget WebSocket closed");
           setIsConnected(false);
-          // Attempt to reconnect after 3 seconds
-          setTimeout(() => {
+
+          // Use refs to get current values instead of closure values
+          const currentShouldMaintain = shouldMaintainConnectionRef.current;
+          const currentIsOpen = isOpenRef.current;
+          const currentSession = currentSessionRef.current;
+
+          // Only attempt to reconnect if we should maintain connection and widget is open
+          if (currentShouldMaintain && currentIsOpen && currentSession) {
             console.log("Attempting to reconnect widget WebSocket...");
-            connectWebSocket();
-          }, 3000);
+            reconnectTimeoutRef.current = setTimeout(() => {
+              // Double check again before actually reconnecting
+              if (
+                shouldMaintainConnectionRef.current &&
+                isOpenRef.current &&
+                currentSessionRef.current
+              ) {
+                connectWebSocket();
+              } else {
+                console.log("Reconnect cancelled - conditions changed");
+              }
+            }, 3000);
+          } else {
+            console.log(
+              "Not reconnecting - connection should not be maintained or widget is closed",
+              {
+                currentShouldMaintain,
+                currentIsOpen,
+                hasSession: !!currentSession,
+              }
+            );
+          }
         };
 
         setWs(websocket);
@@ -187,14 +254,31 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
       connectWebSocket();
 
       return () => {
+        console.log("Cleaning up WebSocket connection");
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
         if (ws) {
-          console.log("Closing widget WebSocket connection");
           ws.close();
         }
       };
+    } else {
+      // Close existing connection if conditions are not met
+      if (ws) {
+        console.log("Closing WebSocket - conditions not met for connection");
+        setShouldMaintainConnection(false);
+        setIsConnected(false);
+        ws.close();
+        setWs(null);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatState.currentSession?.id]);
+  }, [
+    chatState.currentSession?.id,
+    chatState.isOpen,
+    shouldMaintainConnection,
+  ]);
 
   const startChat = useCallback(
     async (customer: Omit<Customer, "id" | "createdAt">) => {
@@ -202,18 +286,30 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
       setError("");
 
       try {
-        const response = await chatAPI.startChat({
-          company_name: customer.company || "",
-          person_name: customer.name,
-          email: customer.email || "",
-          phone: customer.phone || "",
+        // Step 1: Start chat with new API
+        const startResponse = await chatAPI.startChat({
           topic: customer.subject || "Bantuan OSS Perizinan Berusaha",
+          // Optional fields for logged-in users
+          oss_user_id: customer.ossUserId,
+          email: customer.email || undefined,
         });
 
-        // Create a mock session object since the backend returns different format
+        // Step 2: Set contact information
+        if (startResponse.requires_contact) {
+          await chatAPI.setContact({
+            session_id: startResponse.session_id,
+            contact_name: customer.name,
+            contact_email: customer.email || "",
+            contact_phone: customer.phone,
+            company_name: customer.company,
+            position: customer.position,
+          });
+        }
+
+        // Create session object
         const session: ChatSession = {
-          id: response.session_id,
-          customerId: "", // Will be set by backend
+          id: startResponse.session_id,
+          customerId: startResponse.chat_user_id,
           status: "waiting",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -224,6 +320,9 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
           ...prev,
           currentSession: session,
         }));
+
+        // Aktifkan koneksi WebSocket saat session dimulai
+        setShouldMaintainConnection(true);
 
         // Add welcome message
         const welcomeMessage: Message = {
@@ -244,6 +343,52 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
     },
     []
   );
+
+  const loadSession = useCallback(async (sessionId: string) => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Step 1: Get session details
+      const sessionDetails = await chatAPI.getSessionDetails(sessionId);
+
+      // Create session object
+      const session: ChatSession = {
+        id: sessionDetails.id,
+        customerId: sessionDetails.chat_user_id,
+        status: sessionDetails.status as "waiting" | "active" | "closed",
+        createdAt: new Date(sessionDetails.started_at),
+        updatedAt: new Date(sessionDetails.updated_at),
+        messages: [],
+      };
+
+      setChatState((prev) => ({
+        ...prev,
+        currentSession: session,
+      }));
+
+      // Aktifkan koneksi WebSocket saat session dimuat
+      setShouldMaintainConnection(true);
+
+      // Step 2: Get messages separately
+      const messages = await chatAPI.getMessages(sessionId);
+
+      // Convert API messages to widget messages
+      const widgetMessages: Message[] = messages.map((msg) => ({
+        id: msg.id,
+        content: msg.message,
+        sender: msg.sender_type === "customer" ? "customer" : "admin",
+        timestamp: new Date(msg.created_at),
+        type: msg.message_type as "text" | "file" | "image",
+      }));
+
+      setMessages(widgetMessages);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal memuat sesi chat");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -318,18 +463,42 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
   );
 
   const toggleWidget = useCallback(() => {
+    console.log("toggleWidget called, current isOpen:", chatState.isOpen);
     setChatState((prev) => {
       const newIsOpen = !prev.isOpen;
+      console.log("Setting isOpen to:", newIsOpen);
+
+      // Kontrol koneksi WebSocket berdasarkan status widget
+      if (newIsOpen && prev.currentSession) {
+        // Widget dibuka dan ada session aktif - aktifkan WebSocket
+        setShouldMaintainConnection(true);
+      } else if (!newIsOpen) {
+        // Widget ditutup - matikan WebSocket dan clear timeout
+        setShouldMaintainConnection(false);
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+          console.log("Cleared reconnect timeout - widget closed");
+        }
+      }
+
       // Reset unread count ketika widget dibuka
       if (newIsOpen) {
         return { ...prev, isOpen: newIsOpen, unreadCount: 0 };
       }
       return { ...prev, isOpen: newIsOpen };
     });
-  }, []);
+  }, [chatState.isOpen]);
 
   const closeWidget = useCallback(() => {
     setChatState((prev) => ({ ...prev, isOpen: false }));
+    // Matikan koneksi WebSocket saat widget ditutup dan clear timeout
+    setShouldMaintainConnection(false);
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+      console.log("Cleared reconnect timeout - widget closed explicitly");
+    }
   }, []);
 
   const startTyping = useCallback(() => {
@@ -384,6 +553,115 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
     setError("");
   }, []);
 
+  // Fungsi untuk mengontrol koneksi WebSocket
+  const enableWebSocketConnection = useCallback(() => {
+    setShouldMaintainConnection(true);
+  }, []);
+
+  const disableWebSocketConnection = useCallback(() => {
+    setShouldMaintainConnection(false);
+    // Clear any pending reconnect timeout immediately
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+      console.log("Cleared pending reconnect timeout");
+    }
+  }, []);
+
+  // Reset chat history state (useful for refreshing or logout)
+  const resetChatHistory = useCallback(() => {
+    setChatState((prev) => ({
+      ...prev,
+      chatHistory: [],
+      historyLoaded: false,
+      isLoadingHistory: false,
+    }));
+  }, []);
+
+  const loadChatHistory = useCallback(async () => {
+    setChatState((prev) => ({ ...prev, isLoadingHistory: true }));
+    try {
+      const historyResponse = await chatAPI.getChatHistory();
+      setChatState((prev) => ({
+        ...prev,
+        chatHistory: historyResponse.sessions,
+        isLoadingHistory: false,
+        historyLoaded: true,
+      }));
+    } catch (error) {
+      console.error("Failed to load chat history:", error);
+      // Mark as loaded even on error (including 404) to prevent infinite retries
+      setChatState((prev) => ({
+        ...prev,
+        isLoadingHistory: false,
+        historyLoaded: true,
+        chatHistory: [], // Ensure empty array for 404 or other errors
+      }));
+    }
+  }, []);
+
+  // Clear current session and messages
+  const clearSession = useCallback(() => {
+    // Matikan koneksi WebSocket terlebih dahulu
+    setShouldMaintainConnection(false);
+
+    // Clear any pending reconnect timeout immediately
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+      console.log("Cleared reconnect timeout - session cleared");
+    }
+
+    setChatState((prev) => ({
+      ...prev,
+      currentSession: null,
+      isTyping: false,
+      assignedAdmin: null,
+    }));
+    setMessages([]);
+
+    // Close WebSocket if connected
+    if (ws) {
+      ws.close();
+      setWs(null);
+      setIsConnected(false);
+    }
+  }, [ws]);
+
+  // Load chat history when widget opens for the first time
+  useEffect(() => {
+    if (
+      chatState.isOpen &&
+      !chatState.historyLoaded &&
+      !chatState.isLoadingHistory
+    ) {
+      loadChatHistory();
+    }
+  }, [
+    chatState.isOpen,
+    chatState.historyLoaded,
+    chatState.isLoadingHistory,
+    loadChatHistory,
+  ]);
+
+  // Cleanup effect untuk mencegah memory leaks
+  useEffect(() => {
+    return () => {
+      // Clear timeouts on unmount
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+
+      // Close WebSocket connection on unmount
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, [ws]);
+
   return {
     chatState,
     messages,
@@ -392,6 +670,7 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
     config: mergedConfig,
     actions: {
       startChat,
+      loadSession,
       sendMessage,
       uploadFile,
       toggleWidget,
@@ -399,6 +678,11 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
       startTyping,
       stopTyping,
       clearError,
+      loadChatHistory,
+      clearSession,
+      resetChatHistory,
+      enableWebSocketConnection,
+      disableWebSocketConnection,
     },
   };
 }
