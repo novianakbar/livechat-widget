@@ -64,6 +64,7 @@ export function ChatWidget({ config }: ChatWidgetProps) {
   const [showQuickQuestions, _setShowQuickQuestions] = useState(true);
   const [isQuickQuestionsExpanded, setIsQuickQuestionsExpanded] = useState(true);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [showInitialHint, setShowInitialHint] = useState(widgetConfig.showInitialHint ?? true);
 
   // Ref for auto-scrolling
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -101,6 +102,48 @@ export function ChatWidget({ config }: ChatWidgetProps) {
       setCurrentView('history');
     }
   }, [chatState.currentSession, currentView]);
+  
+  // Manage initial hint visibility
+  useEffect(() => {
+    // Check if the user has already seen the hint
+    const hintShownBefore = localStorage.getItem('livechat_hint_shown');
+    
+    if (hintShownBefore !== 'true' && (widgetConfig.showInitialHint ?? true)) {
+      setShowInitialHint(true);
+      
+      // Auto-hide the hint after specified duration
+      const hideTimeout = setTimeout(() => {
+        setShowInitialHint(false);
+        // Remember that the hint has been shown
+        localStorage.setItem('livechat_hint_shown', 'true');
+      }, widgetConfig.initialHintDuration || 7000);
+      
+      return () => clearTimeout(hideTimeout);
+    } else {
+      setShowInitialHint(false);
+    }
+  }, [widgetConfig.showInitialHint, widgetConfig.initialHintDuration]);
+  
+  // Manage initial hint visibility
+  useEffect(() => {
+    // Check if the user has already seen the hint
+    const hintShownBefore = localStorage.getItem('livechat_hint_shown');
+    
+    if (hintShownBefore !== 'true' && (widgetConfig.showInitialHint ?? true)) {
+      setShowInitialHint(true);
+      
+      // Auto-hide the hint after specified duration
+      const hideTimeout = setTimeout(() => {
+        setShowInitialHint(false);
+        // Remember that the hint has been shown
+        localStorage.setItem('livechat_hint_shown', 'true');
+      }, widgetConfig.initialHintDuration || 7000);
+      
+      return () => clearTimeout(hideTimeout);
+    } else {
+      setShowInitialHint(false);
+    }
+  }, [widgetConfig.showInitialHint, widgetConfig.initialHintDuration]);
 
   // const handleSelectSession = async (sessionId: string) => {
   //   await actions.loadSession(sessionId);
@@ -170,27 +213,48 @@ export function ChatWidget({ config }: ChatWidgetProps) {
     <>
       {/* Widget Toggle Button */}
       {!chatState.isOpen && (
-        <button
-          className={clsx(
-            'chat-widget-toggle',
-            `chat-widget-toggle--${widgetConfig.position}`,
-            { 'chat-widget-toggle--has-notifications': chatState.unreadCount > 0 }
-          )}
-          onClick={handleToggleClick}
-          onMouseDown={(e) => {
-            e.preventDefault();
-          }}
-          style={{ backgroundColor: widgetConfig.primaryColor }}
-          type="button"
-          aria-label="Open chat widget"
-        >
-          <MessageCircle size={24} />
-          {chatState.unreadCount > 0 && (
-            <div className="chat-widget-badge">
-              <span>{chatState.unreadCount > 9 ? '9+' : chatState.unreadCount}</span>
+        <>
+          {showInitialHint && (
+            <div className={clsx(
+              'chat-hint',
+              `chat-hint--${widgetConfig.position}`
+            )}>
+              <button 
+                className="chat-hint-close" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowInitialHint(false);
+                }}
+              >
+                &times;
+              </button>
+              <MessageCircle size={16} className="chat-hint-icon" style={{ color: "var(--oss-primary-red)" }} />
+              {widgetConfig.initialHintMessage || "Butuh bantuan? Chat dengan kami!"}
             </div>
           )}
-        </button>
+          <button
+            className={clsx(
+              'chat-widget-toggle',
+              `chat-widget-toggle--${widgetConfig.position}`,
+              { 'chat-widget-toggle--has-notifications': chatState.unreadCount > 0 }
+            )}
+            onClick={handleToggleClick}
+            onMouseDown={(e) => {
+              e.preventDefault();
+            }}
+            style={{ backgroundColor: widgetConfig.primaryColor }}
+            type="button"
+            aria-label="Open chat widget"
+          >
+            <MessageCircle size={24} />
+            {chatState.unreadCount > 0 && (
+              <div className="chat-widget-badge">
+                <span>{chatState.unreadCount > 9 ? '9+' : chatState.unreadCount}</span>
+              </div>
+            )}
+          </button>
+        </>
       )}
 
       {/* Main Chat Widget */}

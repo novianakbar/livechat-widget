@@ -78,7 +78,7 @@ export interface ChatHistoryItem {
     id: string;
     session_id: string;
     sender_id: string | null;
-    sender_type: "customer" | "agent" | "system";
+    sender_type: "customer" | "agent" | "system" | "ai";
     message: string;
     message_type: "text" | "image" | "file" | "system";
     attachments: unknown | null;

@@ -21,6 +21,9 @@ const defaultConfig: WidgetConfig = {
   autoOpen: false,
   showAgentInfo: true,
   allowFileUpload: true,
+  showInitialHint: true,
+  initialHintMessage: "Butuh bantuan? Chat dengan kami!",
+  initialHintDuration: 7000, // tampilkan selama 7 detik
 };
 
 export interface ChatWidgetState {

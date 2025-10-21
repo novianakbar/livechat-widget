@@ -146,7 +146,7 @@ export function useWebSocket({
 
               case "new_message":
                 if (wsMessage.data.session_id === currentSessionRef.current?.id) {
-                  if (wsMessage.data.sender_type === "agent") {
+                  if (wsMessage.data.sender_type === "agent" || wsMessage.data.sender_type === "ai") {
                     const newMessage: Message = {
                       id: wsMessage.data.message_id || `ws-${Date.now()}`,
                       content: wsMessage.data.message,
@@ -180,7 +180,7 @@ export function useWebSocket({
               case "typing_indicator":
                 if (
                   wsMessage.data.session_id === currentSessionRef.current?.id &&
-                  wsMessage.data.sender_type === "agent"
+                  (wsMessage.data.sender_type === "agent" || wsMessage.data.sender_type === "ai")
                 ) {
                   onTypingChangeRef.current(wsMessage.data.is_typing || false);
                 }

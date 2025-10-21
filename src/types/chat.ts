@@ -48,9 +48,12 @@ export interface WidgetConfig {
   position: "bottom-right" | "bottom-left";
   allowFileUpload: boolean;
   showTypingIndicator?: boolean;
+  autoOpen?: boolean;
+  showInitialHint?: boolean;
+  initialHintMessage?: string;
+  initialHintDuration?: number; // dalam milidetik
   maxFileSize?: number; // in MB
   allowedFileTypes?: string[];
-  autoOpen?: boolean;
   showAgentInfo?: boolean;
 }
 

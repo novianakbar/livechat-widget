@@ -48,7 +48,131 @@
 
 .chat-widget--bottom-left {
   bottom: 20px;
-  left: 20px;
+}
+
+/* Hint Notification Styles */
+.chat-hint {
+  position: absolute;
+  padding: 12px 16px;
+  padding-right: 28px; /* Tambahan ruang untuk tombol close */
+  background-color: var(--oss-white);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  z-index: 9998;
+  min-width: 200px;
+  max-width: 280px;
+  width: max-content;
+  white-space: normal;
+  word-wrap: break-word;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.4s ease forwards, pulse 2s infinite ease-in-out;
+  border-left: 3px solid var(--oss-primary-red);
+  border-top: 1px solid var(--oss-gray-200);
+  border-right: 1px solid var(--oss-gray-200);
+  border-bottom: 1px solid var(--oss-gray-200);
+  transition: all 0.3s ease;
+  color: var(--oss-gray-700);
+  display: flex;
+  align-items: center;
+}
+
+/* Arah panah untuk hint */
+.chat-hint::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: var(--oss-white);
+  border-right: 1px solid var(--oss-gray-200);
+  border-bottom: 1px solid var(--oss-gray-200);
+  transform: rotate(45deg);
+  z-index: 9997;
+}
+
+.chat-hint--bottom-right {
+  bottom: 80px;
+  right: 24px;
+}
+
+.chat-hint--bottom-right::after {
+  bottom: -6px;
+  right: 24px;
+}
+
+.chat-hint--bottom-left {
+  bottom: 80px;
+  left: 24px;
+}
+
+.chat-hint--bottom-left::after {
+  bottom: -6px;
+  left: 24px;
+}
+
+.chat-hint--hidden {
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+}
+
+.chat-hint-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: none;
+  background: transparent;
+  padding: 2px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--oss-gray-400);
+  opacity: 0.7;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.chat-hint-close:hover {
+  opacity: 1;
+  background-color: var(--oss-gray-100);
+  color: var(--oss-gray-600);
+}
+
+.chat-hint-icon {
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.2), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+  100% {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .chat-widget--minimized {
