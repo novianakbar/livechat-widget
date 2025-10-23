@@ -272,7 +272,7 @@ export function ChatWidget({ config }: ChatWidgetProps) {
             style={{ backgroundColor: widgetConfig.primaryColor }}
           >
             <div className="chat-widget-header-content">
-              <h3>Live Chat OSS RBA</h3>
+              <h3>Live Chat</h3>
               {chatState.assignedAdmin && (
                 <p className="chat-widget-admin">
                   Admin: {chatState.assignedAdmin.name}
@@ -456,7 +456,7 @@ export function ChatWidget({ config }: ChatWidgetProps) {
                       className="chat-widget-submit"
                       style={{ backgroundColor: widgetConfig.primaryColor }}
                     >
-                      {isLoading ? 'Memulai Chat...' : 'Mulai Chat dengan Admin OSS'}
+                      {isLoading ? 'Memulai Chat...' : 'Mulai Chat dengan kami'}
                     </button>
                   </form>
                 </div>
