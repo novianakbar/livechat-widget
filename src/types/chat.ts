@@ -1,19 +1,22 @@
 export interface Message {
   id: string;
   content: string;
-  sender: "customer" | "admin";
+  sender: "customer" | "admin" | "ai" | "system";
   timestamp: Date;
-  type: "text" | "file" | "image";
+  type: "text" | "file" | "image" | "system";
   fileUrl?: string;
   fileName?: string;
   readAt?: Date;
+  // For escalation offer messages
+  showEscalationOffer?: boolean;
+  escalationOfferMessage?: string;
 }
 
 export interface ChatSession {
   id: string;
   customerId: string;
   adminId?: string;
-  status: "waiting" | "active" | "closed";
+  status: "waiting" | "queued" | "active" | "closed";
   createdAt: Date;
   updatedAt: Date;
   messages: Message[];

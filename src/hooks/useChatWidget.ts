@@ -220,6 +220,7 @@ export function useChatWidget(config?: Partial<WidgetConfig>) {
       resetChatHistory: historyActions.resetChatHistory,
       enableWebSocketConnection: connectionActions.enableConnection,
       disableWebSocketConnection: connectionActions.disableConnection,
+      hideEscalationOffers: messageActions.hideEscalationOffers,
     },
   };
 }

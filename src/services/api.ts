@@ -287,6 +287,25 @@ class ChatAPI {
     return response.data;
   }
 
+  async requestEscalation(
+    sessionId: string,
+    accept: boolean
+  ): Promise<{ escalated: boolean; message: string }> {
+    const response = await this.request<{
+      success: boolean;
+      message: string;
+      data: { escalated: boolean; message: string };
+    }>("/chat/request-escalation", {
+      method: "POST",
+      body: JSON.stringify({
+        session_id: sessionId,
+        accept: accept,
+      }),
+    });
+
+    return response.data;
+  }
+
   // Legacy methods for backward compatibility
   async sendMessage(request: SendMessageRequest): Promise<SendMessageResponse> {
     const response = await this.request<{ data: SendMessageResponse }>(

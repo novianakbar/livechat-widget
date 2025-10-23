@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { MessageCircle, X, Send, Paperclip, Minimize2, FileText, HelpCircle, Settings, ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
+import ReactMarkdown from 'react-markdown';
 import { useChatWidget } from '../hooks/useChatWidget';
 import { NotificationSettings } from './NotificationSettings';
 import { ChatHistory } from './ChatHistory';
-import type { Customer, WidgetConfig } from '../types/chat';
+import { EscalationOffer } from './EscalationOffer';
+import { chatAPI } from '../services/api';
+import type { Customer, WidgetConfig, Message } from '../types/chat';
 import './ChatWidget.css';
 
 interface ChatWidgetProps {
@@ -47,8 +50,103 @@ const formatTimestamp = (timestamp: Date | string): string => {
   }
 };
 
+// Memoized Message Component untuk prevent unnecessary re-renders
+const ChatMessage = memo(({ 
+  message, 
+  markdownComponents,
+  onEscalationAccept,
+  onEscalationDecline,
+  isProcessingEscalation 
+}: { 
+  message: Message;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  markdownComponents: any;
+  onEscalationAccept: () => void;
+  onEscalationDecline: () => void;
+  isProcessingEscalation: boolean;
+}) => {
+  return (
+    <div
+      className={clsx('chat-message', {
+        'chat-message--customer': message.sender === 'customer',
+        'chat-message--admin': message.sender === 'admin' || message.sender === 'ai',
+        'chat-message--system': message.sender === 'system',
+      })}
+    >
+      <div className="chat-message-content">
+        {message.type === 'file' ? (
+          <div className="chat-message-file">
+            <Paperclip size={16} />
+            <span>{message.content}</span>
+          </div>
+        ) : (
+          <div className="chat-message-markdown">
+            <ReactMarkdown components={markdownComponents}>
+              {message.content}
+            </ReactMarkdown>
+          </div>
+        )}
+      </div>
+      <span className="chat-message-time">
+        {formatTimestamp(message.timestamp)}
+      </span>
+
+      {/* Show escalation offer if message has the flag */}
+      {message.showEscalationOffer && (
+        <EscalationOffer
+          message={message.escalationOfferMessage}
+          onAccept={onEscalationAccept}
+          onDecline={onEscalationDecline}
+          isProcessing={isProcessingEscalation}
+        />
+      )}
+    </div>
+  );
+});
+
+ChatMessage.displayName = 'ChatMessage';
+
 export function ChatWidget({ config }: ChatWidgetProps) {
   const { chatState, messages, isLoading, error, config: widgetConfig, actions } = useChatWidget(config);
+
+  // Memoize markdown components to prevent re-creation on every render
+  const markdownComponents = useMemo(() => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    p: ({ children }: any) => <p style={{ margin: '0.5em 0' }}>{children}</p>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ul: ({ children }: any) => <ul style={{ margin: '0.5em 0', paddingLeft: '1.5em' }}>{children}</ul>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ol: ({ children }: any) => <ol style={{ margin: '0.5em 0', paddingLeft: '1.5em' }}>{children}</ol>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    li: ({ children }: any) => <li style={{ margin: '0.25em 0' }}>{children}</li>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    strong: ({ children }: any) => <strong style={{ fontWeight: 600 }}>{children}</strong>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    em: ({ children }: any) => <em style={{ fontStyle: 'italic' }}>{children}</em>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    code: ({ children }: any) => (
+      <code style={{
+        backgroundColor: 'rgba(0,0,0,0.05)',
+        padding: '0.2em 0.4em',
+        borderRadius: '3px',
+        fontSize: '0.9em'
+      }}>
+        {children}
+      </code>
+    ),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    pre: ({ children }: any) => (
+      <pre style={{
+        backgroundColor: 'rgba(0,0,0,0.05)',
+        padding: '0.75em',
+        borderRadius: '5px',
+        overflow: 'auto',
+        margin: '0.5em 0'
+      }}>
+        {children}
+      </pre>
+    ),
+  }), []);
 
   const [currentView, setCurrentView] = useState<'history' | 'form' | 'chat'>('history');
   const [customerForm, setCustomerForm] = useState<Omit<Customer, 'id' | 'createdAt'>>({
@@ -65,9 +163,31 @@ export function ChatWidget({ config }: ChatWidgetProps) {
   const [isQuickQuestionsExpanded, setIsQuickQuestionsExpanded] = useState(true);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showInitialHint, setShowInitialHint] = useState(widgetConfig.showInitialHint ?? true);
+  const [isProcessingEscalation, setIsProcessingEscalation] = useState(false);
+  const [visibleMessageCount, setVisibleMessageCount] = useState(50); // Show last 50 messages by default
 
   // Ref for auto-scrolling
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Ref for typing debounce
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(false);
+
+  // Optimize message rendering - only show visible messages
+  const visibleMessages = useMemo(() => {
+    // Always show recent messages, limit older ones
+    if (messages.length <= visibleMessageCount) {
+      return messages;
+    }
+    // Show last N messages
+    return messages.slice(messages.length - visibleMessageCount);
+  }, [messages, visibleMessageCount]);
+
+  const hasMoreMessages = messages.length > visibleMessageCount;
+
+  const loadMoreMessages = useCallback(() => {
+    setVisibleMessageCount(prev => Math.min(prev + 50, messages.length));
+  }, [messages.length]);
 
   // Auto scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -102,6 +222,15 @@ export function ChatWidget({ config }: ChatWidgetProps) {
       setCurrentView('history');
     }
   }, [chatState.currentSession, currentView]);
+  
+  // Cleanup typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
   
   // Manage initial hint visibility
   useEffect(() => {
@@ -202,10 +331,61 @@ export function ChatWidget({ config }: ChatWidgetProps) {
 
   const handleInputChange = (value: string) => {
     setMessageInput(value);
+    
+    // Debounce typing indicator - hanya kirim jika user terus mengetik
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
     if (value.trim()) {
-      actions.startTyping();
+      // Hanya kirim startTyping jika belum typing
+      if (!isTypingRef.current) {
+        actions.startTyping();
+        isTypingRef.current = true;
+      }
+      
+      // Auto stop typing setelah 2 detik tidak ada input
+      typingTimeoutRef.current = setTimeout(() => {
+        actions.stopTyping();
+        isTypingRef.current = false;
+      }, 2000);
     } else {
+      // Input kosong, stop typing
       actions.stopTyping();
+      isTypingRef.current = false;
+    }
+  };
+
+  const handleEscalationAccept = async () => {
+    if (!chatState.currentSession) return;
+    
+    setIsProcessingEscalation(true);
+    try {
+      await chatAPI.requestEscalation(chatState.currentSession.id, true);
+      
+      // Hide escalation offer dari semua messages
+      actions.hideEscalationOffers();
+      
+      // Success message will be shown via WebSocket
+    } catch (error) {
+      console.error('Failed to request escalation:', error);
+    } finally {
+      setIsProcessingEscalation(false);
+    }
+  };
+
+  const handleEscalationDecline = async () => {
+    if (!chatState.currentSession) return;
+    
+    try {
+      await chatAPI.requestEscalation(chatState.currentSession.id, false);
+      
+      // Hide escalation offer dari semua messages
+      actions.hideEscalationOffers();
+      
+      // Continue chatting with AI
+    } catch (error) {
+      console.error('Failed to decline escalation:', error);
     }
   };
 
@@ -478,35 +658,64 @@ export function ChatWidget({ config }: ChatWidgetProps) {
                         <FileText size={16} />
                         <span>Chat Aktif</span>
                       </div>
-                      <span className="session-status">
-                        Status: {chatState.currentSession.status}
+                      <span className={clsx('session-status', {
+                        'session-status--queued': chatState.currentSession.status === 'queued',
+                        'session-status--active': chatState.currentSession.status === 'active',
+                        'session-status--waiting': chatState.currentSession.status === 'waiting',
+                      })}>
+                        {chatState.currentSession.status === 'queued' 
+                          ? '⏳ Menunggu Agent Tersedia' 
+                          : chatState.currentSession.status === 'active'
+                          ? '✓ Terhubung'
+                          : `Status: ${chatState.currentSession.status}`
+                        }
                       </span>
                     </div>
                   </div>
 
                   <div className="chat-messages-container">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={clsx('chat-message', {
-                          'chat-message--customer': message.sender === 'customer',
-                          'chat-message--admin': message.sender === 'admin',
-                        })}
-                      >
-                        <div className="chat-message-content">
-                          {message.type === 'file' ? (
-                            <div className="chat-message-file">
-                              <Paperclip size={16} />
-                              <span>{message.content}</span>
-                            </div>
-                          ) : (
-                            <p>{message.content}</p>
-                          )}
-                        </div>
-                        <span className="chat-message-time">
-                          {formatTimestamp(message.timestamp)}
-                        </span>
+                    {/* Load More Button - shown at top if there are more messages */}
+                    {hasMoreMessages && (
+                      <div style={{ 
+                        textAlign: 'center', 
+                        padding: '12px',
+                        borderBottom: '1px solid #e5e7eb'
+                      }}>
+                        <button
+                          onClick={loadMoreMessages}
+                          style={{
+                            padding: '8px 16px',
+                            fontSize: '13px',
+                            color: '#6b7280',
+                            background: 'white',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.background = '#f9fafb';
+                            e.currentTarget.style.borderColor = '#9ca3af';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'white';
+                            e.currentTarget.style.borderColor = '#d1d5db';
+                          }}
+                        >
+                          ↑ Muat {Math.min(50, messages.length - visibleMessageCount)} pesan sebelumnya
+                        </button>
                       </div>
+                    )}
+                    
+                    {visibleMessages.map((message) => (
+                      <ChatMessage
+                        key={message.id}
+                        message={message}
+                        markdownComponents={markdownComponents}
+                        onEscalationAccept={handleEscalationAccept}
+                        onEscalationDecline={handleEscalationDecline}
+                        isProcessingEscalation={isProcessingEscalation}
+                      />
                     ))}
                     {chatState.isTyping && (
                       <div className="chat-typing-indicator">

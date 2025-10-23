@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Widget - Markdown Support</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .test-controls {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .test-button {
+      background: #9b1f15;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+    }
+    .test-button:hover {
+      background: #7a1811;
+    }
+    h2 {
+      color: #9b1f15;
+    }
+    .info {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border-left: 4px solid #9b1f15;
+    }
+    .test-message {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .test-message h4 {
+      margin-top: 0;
+      color: #333;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    code {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Test Widget - Markdown Support</h1>
+  
+  <div class="info">
+    <strong>ℹ️ Info:</strong> Widget sekarang mendukung Markdown formatting. Klik tombol di bawah untuk mengirim pesan dengan format berbeda.
+  </div>
+
+  <div class="test-controls">
+    <h2>Test Markdown Messages</h2>
+    <button class="test-button" onclick="sendBasicMessage()">1. Basic Text</button>
+    <button class="test-button" onclick="sendNumberedList()">2. Numbered List</button>
+    <button class="test-button" onclick="sendBulletList()">3. Bullet List</button>
+    <button class="test-button" onclick="sendBoldItalic()">4. Bold & Italic</button>
+    <button class="test-button" onclick="sendStepByStep()">5. Step-by-Step Guide</button>
+    <button class="test-button" onclick="sendFAQ()">6. FAQ Format</button>
+    <button class="test-button" onclick="sendCodeExample()">7. Code Example</button>
+    <button class="test-button" onclick="sendComplexMessage()">8. Complex Format</button>
+  </div>
+
+  <div class="test-controls">
+    <h2>Example Message Formats</h2>
+    
+    <div class="test-message">
+      <h4>1. Basic Text with Line Breaks</h4>
+      <pre><code>Halo! Terima kasih telah menghubungi kami.
+
+Ada yang bisa saya bantu hari ini?</code></pre>
+    </div>
+
+    <div class="test-message">
+      <h4>2. Numbered List (Langkah-langkah)</h4>
+      <pre><code>Berikut langkah-langkah mengurus NIB:
+
+1. Login ke https://oss.go.id
+2. Pilih menu NIB Baru
+3. Isi formulir dengan lengkap
+4. Upload dokumen persyaratan
+5. Submit dan tunggu verifikasi</code></pre>
+    </div>
+
+    <div class="test-message">
+      <h4>3. Bullet List dengan Bold</h4>
+      <pre><code>**Dokumen yang diperlukan:**
+
+- KTP Direktur
+- NPWP Perusahaan
+- Akta Pendirian
+- Surat Keterangan Domisili</code></pre>
+    </div>
+
+    <div class="test-message">
+      <h4>4. Bold & Italic Emphasis</h4>
+      <pre><code>**PENTING:** Permohonan Anda sedang diproses.
+
+Status saat ini: *Menunggu Verifikasi Dokumen*
+
+Silakan cek email Anda secara berkala.</code></pre>
+    </div>
+
+    <div class="test-message">
+      <h4>5. Code Example</h4>
+      <pre><code>Untuk cek status, gunakan command:
+
+`GET /api/status/{id}`
+
+Atau kunjungi dashboard Anda.</code></pre>
+    </div>
+
+    <div class="test-message">
+      <h4>6. Complex Format (Kombinasi)</h4>
+      <pre><code>### Panduan Lengkap NIB
+
+**Langkah-langkah:**
+1. Persiapan dokumen
+2. Login ke sistem
+3. Isi formulir
+
+**Dokumen:**
+- KTP
+- NPWP
+- Akta
+
+**Biaya:** *GRATIS*
+
+---
+
+*Estimasi: 1-3 hari kerja*</code></pre>
+    </div>
+  </div>
+
+  <!-- Load Widget -->
+  <script type="module">
+    import LivechatOSSWidget from './dist/livechat-oss-widget.umd.js';
+
+    // Initialize widget
+    window.widget = LivechatOSSWidget.init({
+      apiUrl: 'http://localhost:8080/api/v1',
+      wsUrl: 'ws://localhost:8081/ws',
+      position: 'bottom-right',
+      primaryColor: '#9b1f15',
+      showInitialHint: true,
+      initialHintMessage: 'Butuh bantuan? Chat dengan kami!'
+    });
+
+    // Test functions to simulate admin messages
+    window.sendBasicMessage = function() {
+      simulateAdminMessage("Halo! Terima kasih telah menghubungi kami.\n\nAda yang bisa saya bantu hari ini?");
+    };
+
+    window.sendNumberedList = function() {
+      simulateAdminMessage("Berikut langkah-langkah mengurus NIB:\n\n1. Login ke https://oss.go.id\n2. Pilih menu **NIB Baru**\n3. Isi formulir dengan lengkap\n4. Upload dokumen persyaratan\n5. Submit dan tunggu verifikasi\n\n*Proses займет 1-3 hari kerja*");
+    };
+
+    window.sendBulletList = function() {
+      simulateAdminMessage("**Dokumen yang diperlukan:**\n\n- KTP Direktur\n- NPWP Perusahaan\n- Akta Pendirian\n- Surat Keterangan Domisili\n\n*Semua dokumen harus asli atau legalisir*");
+    };
+
+    window.sendBoldItalic = function() {
+      simulateAdminMessage("**PENTING:** Permohonan Anda sedang diproses.\n\nStatus saat ini: *Menunggu Verifikasi Dokumen*\n\nSilakan cek email Anda secara berkala untuk update status.");
+    };
+
+    window.sendStepByStep = function() {
+      simulateAdminMessage("**Cara Mengecek Status Permohonan:**\n\n1. Buka website OSS\n2. Login dengan akun Anda\n3. Klik menu **Status Permohonan**\n4. Cari permohonan berdasarkan:\n   - Nomor permohonan\n   - Tanggal pengajuan\n5. Lihat detail status\n\n**Tips:** Bookmark halaman status untuk akses cepat!");
+    };
+
+    window.sendFAQ = function() {
+      simulateAdminMessage("### Pertanyaan: Berapa biaya pengurusan NIB?\n\n**Jawaban:** Pengurusan NIB melalui OSS adalah **GRATIS**.\n\nJika ada pihak yang meminta biaya, silakan laporkan ke:\n- Email: `pengaduan@oss.go.id`\n- Telp: **150**\n\n*Hati-hati terhadap penipuan!*");
+    };
+
+    window.sendCodeExample = function() {
+      simulateAdminMessage("Untuk mengecek status via API:\n\n```\nGET /api/v1/status/{permohonan_id}\nHeaders: Authorization: Bearer {token}\n```\n\nAtau gunakan command line:\n\n`curl -X GET \"https://api.oss.go.id/status/123\" -H \"Authorization: Bearer token\"`");
+    };
+
+    window.sendComplexMessage = function() {
+      simulateAdminMessage("### 📋 Panduan Lengkap Pengurusan NIB\n\n**Persyaratan Dokumen:**\n\n1. Dokumen Perusahaan\n   - Akta Pendirian\n   - SK Kemenkumham\n   - NPWP Perusahaan\n\n2. Dokumen Penanggung Jawab\n   - KTP Direktur\n   - NPWP Pribadi\n\n**Langkah Pengajuan:**\n\n1. **Persiapan**\n   - Scan semua dokumen\n   - Format: PDF atau JPG\n   - Ukuran max: 2MB\n\n2. **Pengajuan Online**\n   - Login OSS\n   - Isi formulir NIB\n   - Upload dokumen\n\n3. **Verifikasi**\n   - Tunggu email konfirmasi\n   - Cek status berkala\n\n---\n\n**Biaya:** *GRATIS*\n**Estimasi:** *1-3 hari kerja*\n**Bantuan:** Call center **150**\n\n*Pastikan semua dokumen sudah lengkap untuk mempercepat proses!*");
+    };
+
+    // Simulate receiving admin message
+    function simulateAdminMessage(content) {
+      // This is just for demo - in real app, messages come from WebSocket
+      console.log('Simulating admin message:', content);
+      alert('Dalam implementasi real, pesan ini akan datang dari WebSocket.\n\nBuka widget untuk melihat format pesan!');
+      
+      // In real implementation, the message would be received via WebSocket
+      // and automatically rendered with markdown formatting
+    }
+  </script>
+
+  <script>
+    // Add some helper info
+    console.log('%c Widget Test Page - Markdown Support ', 'background: #9b1f15; color: white; font-size: 16px; padding: 10px;');
+    console.log('Widget telah dimuat dengan markdown support.');
+    console.log('Klik tombol untuk melihat contoh format pesan.');
+  </script>
+</body>
+</html>

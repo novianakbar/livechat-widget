@@ -146,32 +146,51 @@ export function useWebSocket({
 
               case "new_message":
                 if (wsMessage.data.session_id === currentSessionRef.current?.id) {
-                  if (wsMessage.data.sender_type === "agent" || wsMessage.data.sender_type === "ai") {
+                  // Handle messages from agent, ai, or system
+                  if (
+                    wsMessage.data.sender_type === "agent" || 
+                    wsMessage.data.sender_type === "ai" || 
+                    wsMessage.data.sender_type === "system"
+                  ) {
+                    // Map sender type from backend to frontend
+                    let senderType: "admin" | "ai" | "system" = "admin";
+                    if (wsMessage.data.sender_type === "ai") {
+                      senderType = "ai";
+                    } else if (wsMessage.data.sender_type === "system") {
+                      senderType = "system";
+                    }
+                    
+                    const messageType = wsMessage.data.message_type || "text";
+                    
                     const newMessage: Message = {
                       id: wsMessage.data.message_id || `ws-${Date.now()}`,
                       content: wsMessage.data.message,
-                      sender: "admin",
+                      sender: senderType,
                       timestamp: new Date(wsMessage.data.timestamp || new Date()),
-                      type: "text",
+                      type: messageType === "system" ? "system" : "text",
+                      showEscalationOffer: wsMessage.data.show_escalation_offer || false,
+                      escalationOfferMessage: wsMessage.data.escalation_offer_message || "",
                     };
 
                     onNewMessageRef.current(newMessage);
 
-                    // Handle notifications
-                    if (!isOpenRef.current) {
-                      onUnreadCountChangeRef.current(1);
-                      notificationService.notifyNewMessage(
-                        assignedAdminRef.current?.name || "Admin OSS",
-                        wsMessage.data.message,
-                        {
-                          playSound: true,
-                          showBrowser: true,
-                          vibrate: true,
-                          soundType: "info",
-                        }
-                      );
-                    } else {
-                      notificationService.playNotificationSound(1);
+                    // Handle notifications (skip for system messages)
+                    if (senderType !== "system") {
+                      if (!isOpenRef.current) {
+                        onUnreadCountChangeRef.current(1);
+                        notificationService.notifyNewMessage(
+                          senderType === "ai" ? "AI Assistant" : (assignedAdminRef.current?.name || "Admin OSS"),
+                          wsMessage.data.message,
+                          {
+                            playSound: true,
+                            showBrowser: true,
+                            vibrate: true,
+                            soundType: "info",
+                          }
+                        );
+                      } else {
+                        notificationService.playNotificationSound(1);
+                      }
                     }
                   }
                 }

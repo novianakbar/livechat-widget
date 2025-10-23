@@ -27,7 +27,7 @@
   position: fixed;
   z-index: 9999;
   width: 400px;
-  height: 520px;
+  height: 580px;
   background: var(--oss-white);
   border-radius: 16px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25),
@@ -526,6 +526,30 @@
   align-self: flex-start;
 }
 
+.chat-message--system {
+  align-items: center;
+  align-self: center;
+  width: 100%;
+  margin: 12px 0;
+}
+
+.chat-message--system .chat-message-content {
+  background: #f0f7ff;
+  color: #1a5490;
+  border: 1px solid #b8d4f1;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  text-align: center;
+  max-width: 85%;
+  margin: 0 auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.chat-message--system .chat-message-time {
+  display: none;
+}
+
 .chat-message-content {
   padding: 12px 16px;
   border-radius: 20px;
@@ -558,6 +582,125 @@
   line-height: 1.5;
   font-weight: 400;
 }
+
+/* Markdown Formatting Styles */
+.chat-message-markdown {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.chat-message-markdown p {
+  margin: 0.5em 0;
+}
+
+.chat-message-markdown p:first-child {
+  margin-top: 0;
+}
+
+.chat-message-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.chat-message-markdown ul,
+.chat-message-markdown ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.chat-message-markdown li {
+  margin: 0.25em 0;
+}
+
+.chat-message-markdown strong {
+  font-weight: 600;
+}
+
+.chat-message-markdown em {
+  font-style: italic;
+}
+
+.chat-message-markdown code {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.chat-message-markdown pre {
+  overflow-x: auto;
+  font-size: 0.85em;
+}
+
+.chat-message-markdown pre code {
+  font-size: 1em;
+}
+
+.chat-message-markdown h1,
+.chat-message-markdown h2,
+.chat-message-markdown h3,
+.chat-message-markdown h4,
+.chat-message-markdown h5,
+.chat-message-markdown h6 {
+  margin: 0.75em 0 0.5em 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.chat-message-markdown h1:first-child,
+.chat-message-markdown h2:first-child,
+.chat-message-markdown h3:first-child,
+.chat-message-markdown h4:first-child,
+.chat-message-markdown h5:first-child,
+.chat-message-markdown h6:first-child {
+  margin-top: 0;
+}
+
+.chat-message-markdown h1 { font-size: 1.5em; }
+.chat-message-markdown h2 { font-size: 1.3em; }
+.chat-message-markdown h3 { font-size: 1.15em; }
+.chat-message-markdown h4 { font-size: 1em; }
+.chat-message-markdown h5 { font-size: 0.9em; }
+.chat-message-markdown h6 { font-size: 0.85em; }
+
+.chat-message-markdown blockquote {
+  border-left: 3px solid var(--oss-gray-300);
+  padding-left: 1em;
+  margin: 0.5em 0;
+  color: var(--oss-gray-600);
+}
+
+.chat-message-markdown hr {
+  border: none;
+  border-top: 1px solid var(--oss-gray-200);
+  margin: 0.75em 0;
+}
+
+/* Different styles for admin vs customer messages */
+.chat-message--admin .chat-message-markdown code {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--oss-gray-800);
+}
+
+.chat-message--customer .chat-message-markdown code {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--oss-white);
+}
+
+.chat-message--admin .chat-message-markdown pre {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.chat-message--customer .chat-message-markdown pre {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.chat-message--customer .chat-message-markdown blockquote {
+  border-left-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.chat-message--customer .chat-message-markdown hr {
+  border-top-color: rgba(255, 255, 255, 0.3);
+}
+
 
 .chat-message-file {
   display: flex;
@@ -1222,8 +1365,8 @@
 .chat-header-info {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 8px;
+  padding: 8px;
   border-bottom: 1px solid #e2e8f0;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 0;
@@ -1269,6 +1412,23 @@
   color: #92400e;
 }
 
+.session-status--queued,
+.session-status[class*="queued"] {
+  background: #fef3c7;
+  color: #c2410c;
+  animation: pulse-status 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-status {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.session-status--active,
 .session-status[class*="active"] {
   background: #dcfce7;
   color: #166534;

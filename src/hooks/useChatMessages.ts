@@ -118,6 +118,15 @@ export function useChatMessages() {
     setError("");
   }, []);
 
+  const hideEscalationOffers = useCallback(() => {
+    setMessages((prev) =>
+      prev.map((msg) => ({
+        ...msg,
+        showEscalationOffer: false,
+      }))
+    );
+  }, []);
+
   return {
     messages,
     isLoading,
@@ -130,6 +139,7 @@ export function useChatMessages() {
       uploadFile,
       clearMessages,
       clearError,
+      hideEscalationOffers,
     },
   };
 }
